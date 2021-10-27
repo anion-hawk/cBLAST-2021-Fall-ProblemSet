@@ -60,34 +60,34 @@ Id: Os01t0356800-00  Length: 5342  Actual Count: 222  Predicted Count: 471.84104
 - #### Python
   - Biopython 1.79
 
-The genbank file is downloaded and renamed as `U00096.3.gb` and `cds.py` is run. The file is parsed as a `Seq` object, and the collection of `SeqFeature` objects are iterated over. The objects with `feature.type` set as `CDS` are stored as a list of `Seq` objects, which is then written in `U00096.3_cds.fasta`.
+The genbank file is downloaded and renamed as `U00096.3.gb` and `discontinuouscds.py` is run. The file is parsed as a `Seq` object, and the collection of `SeqFeature` objects are iterated over. The objects with `feature.type` set as `CDS` and the `location` string containing the substring `join` are stored as a list of `Seq` objects, which is then written in `U00096.3_discontinuous_cds.fasta`. This produces a FASTA file containing all the discontinuous protein coding genes.
 
 ---
 ## Task-3
 
 The sequence of the two-pore potassium channel is obtained from RAP-DB. The id of the gene is used to run a strict search for sgRNA in [E-CRISP](http://www.e-crisp.org/E-CRISP/index.html). The output tab file is downloaded and the topmost choice is selected.
 
-|Name					|TPKA_1_1548	|
-|-----------------------|---------------|
-|Length					|23	|
-|Start					|1810	|
-|End					|1833	|
-|Strand					|plus	|
+|Name					|TPKA_1_1548	            |
+|-----------------------|---------------------------|
+|Length					|23         	            |
+|Start					|1810	                    |
+|End					|1833                   	|
+|Strand					|plus	                    |
 |Nucleotide sequence	|GGCTTCCGCTGCAGCACATT NGG	|
-|%A %C %T %G			|16 28 24 32	|
-|S-Score				|100	|
-|A-Score				|58.3333	|
-|E-Score				|46.5050	|
-|Number of Hits			|1	|
-|Direction				|fw	|
-|CDS_score				|0	|
-|Exon_Score				|0	|
-|seed_GC				|0.4	|
-|Doench_Score			|0.0138998335896085	|
-|Xu_score				|-0.088648902	|
-|Chromosome				|3	|
-|Genomic start			|31016142	|
-|Genomic End			|31016165	|
+|%A %C %T %G			|16 28 24 32	            |
+|S-Score				|100	                    |
+|A-Score				|58.3333	                |
+|E-Score				|46.5050                    |
+|Number of Hits			|1	                        |
+|Direction				|fw	                        |
+|CDS_score				|0	                        |
+|Exon_Score				|0	                        |
+|seed_GC				|0.4	                    |
+|Doench_Score			|0.0138998335896085	        |
+|Xu_score				|-0.088648902	            |
+|Chromosome				|3	                        |
+|Genomic start			|31016142	                |
+|Genomic End			|31016165	                |
 
 The sequence is converted to RNA and the constant tracrRNA is appended at the end:
 
@@ -109,16 +109,40 @@ The sequence is converted to RNA and the constant tracrRNA is appended at the en
   - ggplot2
   - pheatmap
 
-The excel file is converted into a CSV of raw read counts. DESeq2 is used to find differentially expressed genes between the different conditions at a significance level of 0.01. The summary of the results of DESeq is:
-```
-out of 30210 with nonzero total read count
-adjusted p-value < 0.01
-LFC > 0 (up)       : 2484, 8.2%
-LFC < 0 (down)     : 3113, 10%
-outliers [1]       : 206, 0.68%
-low counts [2]     : 1170, 3.9%
-(mean count < 2)
-```
-The list of differentially expressed genes is written in `DEgenes.csv`. The produced heatmap from the normalized read counts is:
+The Excel file is converted into a CSV of raw read counts. DESeq2 is used to find differentially expressed genes between the different conditions at a significance level of 0.01. The summary of the results of DESeq is:
+
+|Condition              |Upregulated|Downregulated|Total|Outliers|
+|-----------------------|-----------|-------------|-----|--------|
+|VL: treated vs control |2121       |2392         |5053 |13      |
+|VR: treated vs control |1957       |2847         |4804 |1       |
+|BL: treated vs control |534        |551          |1085 |86      |
+|BR: treated vs control |777        |756          |1533 |19      |
+
+#### Comparisons with the analysis of Formentin et al. 2018
+
+The original research used EdgeR for their analysis, with a significance level of 0.05. Adjusting the significance level in `DifferentiallyExpressed.R` to 0.05, the results are:
+
+- removing lowly expressed genes (total count < 10)
+   
+  |Condition              |Upregulated|Downregulated|Total|Formentin et al. 2018 |Percentage Difference |
+  |-----------------------|-----------|-------------|-----|----------------------|----------------------|
+  |VL: treated vs control |3025       |3312         |6337 |5992                  |5.76%                 |
+  |VR: treated vs control |2967       |3838         |6805 |7221                  |-5.76%                |
+  |BL: treated vs control |866        |926          |1792 |1572                  |13.99%                |
+  |BR: treated vs control |1233       |1189         |2422 |2263                  |7.03%                 |
+
+- not removing lowly expressed genes
+   
+  |Condition              |Upregulated|Downregulated|Total|Formentin et al. 2018 |Percentage Difference |
+  |-----------------------|-----------|-------------|-----|----------------------|----------------------|
+  |VL: treated vs control |3026       |3303         |6329 |5992                  |5.62%                 |
+  |VR: treated vs control |2967       |3844         |6811 |7221                  |-5.68%                |
+  |BL: treated vs control |856        |900          |1756 |1572                  |11.70%                |
+  |BR: treated vs control |1218       |1182         |2400 |2263                  |6.05%                 |
+
+The list of differentially expressed genes is written in `DEgenes_VL.csv`, `DEgenes_VR.csv`, `DEgenes_BL.csv`, `DEgenes_BR.csv` respectively.
+
+The normalized counts for all the readings are merged together and used to produce the following heatmap:
+
 ![Heatmap of Normalized Counts of Differentially Expressed Genes](heatmap.png)
 
